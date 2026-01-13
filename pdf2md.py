@@ -129,6 +129,91 @@ class PDF2Markdown:
         except Exception as e:
             print(f"Warning: Could not process image transparency: {e}")
     
+    def _extract_page_links(self, page: fitz.Page) -> List[dict]:
+        """
+        Extract hyperlinks from a PDF page.
+        
+        Args:
+            page: PyMuPDF page object
+            
+        Returns:
+            List of link dictionaries with 'text', 'uri', and 'type' keys
+        """
+        links = []
+        
+        for link in page.get_links():
+            link_info = {
+                'text': '',
+                'uri': '',
+                'type': ''
+            }
+            
+            # Get the link rectangle
+            rect = link.get('from', fitz.Rect())
+            if rect:
+                # Extract text within the link's bounding box
+                link_info['text'] = page.get_text("text", clip=rect).strip()
+            
+            # Handle different link types
+            kind = link.get('kind', 0)
+            
+            if kind == fitz.LINK_URI:  # External URI
+                link_info['uri'] = link.get('uri', '')
+                link_info['type'] = 'external'
+            elif kind == fitz.LINK_GOTO:  # Internal link to another page
+                target_page = link.get('page', -1)
+                if target_page >= 0:
+                    link_info['uri'] = f'#page-{target_page + 1}'
+                    link_info['type'] = 'internal'
+            elif kind == fitz.LINK_NAMED:  # Named destination
+                link_info['uri'] = link.get('name', '')
+                link_info['type'] = 'named'
+            
+            if link_info['text'] and link_info['uri']:
+                links.append(link_info)
+        
+        return links
+    
+    def _apply_links_to_markdown(self, markdown_content: str, links: List[dict]) -> str:
+        """
+        Apply extracted PDF links to markdown content.
+        
+        Args:
+            markdown_content: The markdown text from VLM
+            links: List of link dictionaries from _extract_page_links
+            
+        Returns:
+            Markdown content with proper hyperlinks
+        """
+        for link in links:
+            text = link['text']
+            uri = link['uri']
+            
+            if not text or not uri:
+                continue
+            
+            # Clean up text for matching (remove extra spaces/newlines)
+            clean_text = ' '.join(text.split())
+            
+            # Skip if text is too short (likely false positive)
+            if len(clean_text) < 3:
+                continue
+            
+            # Escape regex special characters in the text
+            escaped_text = re.escape(clean_text)
+            
+            # Pattern to find the text that's NOT already in a markdown link
+            # Match text that's not preceded by [ or followed by ]( 
+            pattern = rf'(?<!\[)({escaped_text})(?!\]\()'
+            
+            # Create the markdown link
+            md_link = f'[{clean_text}]({uri})'
+            
+            # Replace first occurrence only to avoid duplicates
+            markdown_content = re.sub(pattern, md_link, markdown_content, count=1, flags=re.IGNORECASE)
+        
+        return markdown_content
+    
     def _extract_page_images(self, page: fitz.Page) -> List[Tuple[str, str]]:
         """
         Extract embedded images from a page.
@@ -231,6 +316,9 @@ class PDF2Markdown:
         # Extract embedded images first
         extracted_images = self._extract_page_images(page)
         
+        # Extract hyperlinks from the page
+        extracted_links = self._extract_page_links(page)
+        
         # Render page to image for VLM analysis
         page_image_path = self._render_page_to_image(page)
         
@@ -271,6 +359,10 @@ class PDF2Markdown:
             # (VLM may reference more images than actually exist in the PDF)
             placeholder_pattern = r'!\[[^\]]*\]\([^)]*placeholder[^)]*\)'
             markdown_content = re.sub(placeholder_pattern, '', markdown_content, flags=re.IGNORECASE)
+            
+            # Apply extracted hyperlinks to markdown
+            if extracted_links:
+                markdown_content = self._apply_links_to_markdown(markdown_content, extracted_links)
             
             return markdown_content
             
