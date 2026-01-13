@@ -31,7 +31,7 @@ pip install -r requirements.txt
 3. Install Ollama and a vision model:
 ```bash
 # Install Ollama from https://ollama.ai/
-ollama pull llava
+ollama pull qwen3-vl
 ```
 
 ## Usage
@@ -95,9 +95,9 @@ The converter produces:
 ## Supported Vision Models
 
 Any Ollama vision model should work, including:
-- `llava` (recommended)
+- `qwen3-vl` (recommended, default)
+- `llava`
 - `llama3.2-vision`
-- `qwen2-vl`
 - `bakllava`
 
 ## How It Works
