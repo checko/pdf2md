@@ -5,7 +5,7 @@ Usage:
     python main.py <pdf_file> [options]
     
 Options:
-    --model MODEL       Ollama vision model (default: llava)
+    --model MODEL       Ollama vision model (default: qwen3-vl)
     --output PATH       Output Markdown file path
     --images-dir DIR    Directory to save extracted images
     --pages START-END   Page range to convert (e.g., 1-2 for first 2 pages)

@@ -17,7 +17,7 @@ from ollama_client import OllamaClient
 class PDF2Markdown:
     """Convert PDF to Markdown using VLM for layout understanding."""
     
-    def __init__(self, pdf_path: str, model: str = "llava"):
+    def __init__(self, pdf_path: str, model: str = "qwen3-vl"):
         """
         Initialize the converter.
         
