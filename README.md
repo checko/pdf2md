@@ -47,12 +47,14 @@ python main.py document.pdf
 
 ```bash
 python main.py <pdf_file> [options]
+python main.py --folder <directory> [options]
 
 Options:
   --model MODEL       Ollama vision model to use (default: qwen3-vl)
-  --output PATH       Output Markdown file path
+  --output PATH       Output Markdown file path (single file mode only)
   --images-dir DIR    Directory to save extracted images
   --pages START-END   Page range to convert (e.g., 1-2 for first 2 pages)
+  --folder, -f DIR    Convert all PDF files in the specified directory
 ```
 
 ### Examples
@@ -70,6 +72,27 @@ python main.py document.pdf --model llama3.2-vision --output output.md
 # Specify custom images directory
 python main.py document.pdf --images-dir ./my_images
 ```
+
+### Batch Processing
+
+Convert all PDF files in a folder:
+
+```bash
+# Convert all PDFs in a folder
+python main.py --folder /path/to/pdfs
+
+# Short form
+python main.py -f /path/to/pdfs
+
+# With page range (convert only first 5 pages of each PDF)
+python main.py --folder /path/to/pdfs --pages 1-5
+```
+
+Batch processing features:
+- Finds all `.pdf` and `.PDF` files in the directory
+- Processes files in alphabetical order
+- Continues processing even if some files fail
+- Displays a summary with successful and failed conversions
 
 ### Remote Ollama Server
 
