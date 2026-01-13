@@ -7,7 +7,7 @@ import ollama
 from pathlib import Path
 
 # Remote Ollama server configuration
-OLLAMA_HOST = "http://192.168.145.70:11434"
+OLLAMA_HOST = "http://192.168.145.77:11434"
 
 
 class OllamaClient:

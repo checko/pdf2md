@@ -49,8 +49,8 @@ Examples:
     )
     
     parser.add_argument("pdf_file", help="Path to the PDF file to convert")
-    parser.add_argument("--model", default="llava", 
-                        help="Ollama vision model to use (default: llava)")
+    parser.add_argument("--model", default="qwen3-vl", 
+                        help="Ollama vision model to use (default: qwen3-vl)")
     parser.add_argument("--output", "-o", 
                         help="Output Markdown file path")
     parser.add_argument("--images-dir", 

@@ -202,15 +202,45 @@ class PDF2Markdown:
             # Escape regex special characters in the text
             escaped_text = re.escape(clean_text)
             
-            # Pattern to find the text that's NOT already in a markdown link
-            # Match text that's not preceded by [ or followed by ]( 
-            pattern = rf'(?<!\[)({escaped_text})(?!\]\()'
-            
             # Create the markdown link
             md_link = f'[{clean_text}]({uri})'
             
-            # Replace first occurrence only to avoid duplicates
-            markdown_content = re.sub(pattern, md_link, markdown_content, count=1, flags=re.IGNORECASE)
+            # We need to replace all occurrences that are NOT already markdown links
+            # Use a function to check each match
+            def replace_if_not_linked(match):
+                # Get the position of the match
+                start = match.start()
+                end = match.end()
+                
+                # Check if this text is already part of a markdown link by looking for:
+                # 1. Is it inside [...] of a link (preceded by [ and followed by ](?
+                # 2. Is it the URL part of a link (inside parentheses after ])
+                
+                # Look backwards for unmatched [
+                before = markdown_content[:start]
+                after = markdown_content[end:]
+                
+                # Check if preceded by [ without a closing ]
+                bracket_count = 0
+                for c in reversed(before[-50:]):  # Check last 50 chars
+                    if c == ']':
+                        bracket_count += 1
+                    elif c == '[':
+                        if bracket_count > 0:
+                            bracket_count -= 1
+                        else:
+                            # Found unmatched [ - we're inside link text
+                            return match.group(0)  # Don't replace
+                
+                # Check if this is followed by ]( which would mean it's the end of existing link text
+                if after.lstrip().startswith(']('):
+                    return match.group(0)  # Don't replace
+                
+                return md_link
+            
+            # Pattern to find the text (simple word boundary matching)
+            pattern = rf'(?<![[\w])({escaped_text})(?![]\w])'
+            markdown_content = re.sub(pattern, replace_if_not_linked, markdown_content, flags=re.IGNORECASE)
         
         return markdown_content
     
