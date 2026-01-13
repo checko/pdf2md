@@ -3,11 +3,12 @@ Ollama VLM Client for PDF analysis and image description.
 """
 
 import base64
+import os
 import ollama
 from pathlib import Path
 
-# Remote Ollama server configuration
-OLLAMA_HOST = "http://192.168.145.77:11434"
+# Ollama server configuration - defaults to localhost, can be overridden via environment variable
+OLLAMA_HOST = os.environ.get("OLLAMA_HOST", "http://localhost:11434")
 
 
 class OllamaClient:
